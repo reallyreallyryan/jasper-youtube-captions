@@ -1,10 +1,5 @@
-# Use Python 3.11 slim image
+# Simple Python-only deployment (no ffmpeg for now)
 FROM python:3.11-slim
-
-# Install system dependencies including ffmpeg
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
