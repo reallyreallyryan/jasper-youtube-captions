@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 Jasper Caption Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #6c757d;
+        }
+
+        .tab.active {
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .upload-zone {
+            border: 3px dashed #e9ecef;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            background: #f8f9fa;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        .upload-zone.dragover {
+            border-color: #2ecc71;
+            background: #f0fff4;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #6c757d;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #adb5bd;
+        }
+
+        .url-input-area {
+            margin-bottom: 30px;
+        }
+
+        .url-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: monospace;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+        }
+
+        .process-btn {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .process-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+        }
+
+        .process-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e9ecef;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .download-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #2980b9;
+        }
+
+        .result-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-filename {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .result-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .result-caption {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .result-transcript {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .copy-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #e9ecef;
+        }
+
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .csv-upload {
+            border: 2px dashed #e9ecef;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .csv-upload:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                margin-bottom: 8px;
+            }
+            
+            .results-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Jasper Caption Generator</h1>
+            <p>AI-powered captions for healthcare marketing content</p>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('videos')">📁 Video Files</button>
+                <button class="tab" onclick="switchTab('urls')">🔗 YouTube URLs</button>
+                <button class="tab" onclick="switchTab('csv')">📊 CSV Upload</button>
+            </div>
+
+            <!-- Video Files Tab -->
+            <div id="videos-tab" class="tab-content active">
+                <div class="upload-zone" onclick="document.getElementById('video-files').click()">
+                    <div class="upload-icon">🎬</div>
+                    <div class="upload-text">Drop your video files here</div>
+                    <div class="upload-subtext">Or click to browse (MP4, MOV, AVI supported)</div>
+                </div>
+                <input type="file" id="video-files" class="file-input" multiple accept="video/*">
+                <button class="process-btn" onclick="processVideos()">🚀 Generate Captions</button>
+            </div>
+
+            <!-- YouTube URLs Tab -->
+            <div id="urls-tab" class="tab-content">
+                <div class="url-input-area">
+                    <textarea 
+                        id="url-input" 
+                        class="url-input" 
+                        placeholder="Paste YouTube Shorts URLs here (one per line):
+
+https://www.youtube.com/shorts/abc123
+https://www.youtube.com/shorts/def456
+https://www.youtube.com/shorts/ghi789"
+                    ></textarea>
+                </div>
+                <button class="process-btn" onclick="processUrls()">🚀 Generate Captions</button>
+            </div>
+
+            <!-- CSV Upload Tab -->
+            <div id="csv-tab" class="tab-content">
+                <div class="csv-upload" onclick="document.getElementById('csv-file').click()">
+                    <div class="upload-icon">📊</div>
+                    <div class="upload-text">Upload your content calendar CSV</div>
+                    <div class="upload-subtext">Must contain a column with YouTube URLs</div>
+                </div>
+                <input type="file" id="csv-file" class="file-input" accept=".csv">
+                <button class="process-btn" onclick="processCsv()">🚀 Enhance CSV</button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <div>Processing your content... This may take a few minutes ⏳</div>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="results">
+                <div class="summary" id="summary"></div>
+                <div class="results-header">
+                    <div class="results-title">🎉 Results</div>
+                    <button class="download-btn" onclick="downloadResults()">💾 Download CSV</button>
+                </div>
+                <div id="results-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentResults = [];
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            // Clear results
+            hideResults();
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+            hideResults();
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        function showResults() {
+            document.getElementById('results').classList.add('show');
+        }
+
+        function hideResults() {
+            document.getElementById('results').classList.remove('show');
+        }
+
+        async function processVideos() {
+            const fileInput = document.getElementById('video-files');
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                alert('Please select video files first!');
+                return;
+            }
+
+            showLoading();
+
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('files', file);
+            }
+
+            try {
+                const response = await fetch('/process-videos', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                displayResults(data.results, 'videos');
+            } catch (error) {
+                alert('Error processing videos: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function processUrls() {
+            const urlInput = document.getElementById('url-input');
+            const urlText = urlInput.value.trim();
+
+            if (!urlText) {
+                alert('Please enter YouTube URLs first!');
+                return;
+            }
+
+            const urls = urlText.split('\n')
+                .map(url => url.trim())
+                .filter(url => url.length > 0);
+
+            if (urls.length === 0) {
+                alert('Please enter valid YouTube URLs!');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/process-urls', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(urls)
+                });
+
+                const data = await response.json();
+                displayResults(data.results, 'urls');
+            } catch (error) {
+                alert('Error processing URLs: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function processCsv() {
+            const fileInput = document.getElementById('csv-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a CSV file first!');
+                return;
+            }
+
+            showLoading();
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/process-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Download the enhanced CSV
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'enhanced_captions.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    alert('🎉 CSV enhanced successfully and downloaded!');
+                } else {
+                    const error = await response.json();
+                    alert('Error processing CSV: ' + error.detail);
+                }
+            } catch (error) {
+                alert('Error processing CSV: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayResults(results, type) {
+            currentResults = results;
+            
+            // Generate summary
+            const successful = results.filter(r => r.success).length;
+            const total = results.length;
+            const totalTime = results.reduce((sum, r) => sum + (r.processing_time || 0), 0);
+
+            document.getElementById('summary').innerHTML = `
+                <div>🎯 Processing Complete!</div>
+                <div class="summary-stats">
+                    <div class="stat">
+                        <div class="stat-number">${total}</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">${successful}</div>
+                        <div class="stat-label">Success</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">${Math.round((successful/total)*100)}%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">${Math.round(totalTime)}s</div>
+                        <div class="stat-label">Total Time</div>
+                    </div>
+                </div>
+            `;
+
+            // Generate results
+            const container = document.getElementById('results-container');
+            container.innerHTML = results.map(result => {
+                const identifier = type === 'urls' ? result.url : result.filename;
+                const statusClass = result.success ? 'status-success' : 'status-error';
+                const statusText = result.success ? '✅ Success' : '❌ Failed';
+
+                return `
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-filename">${identifier}</div>
+                            <div class="result-status ${statusClass}">${statusText}</div>
+                        </div>
+                        ${result.success ? `
+                            <div class="result-caption">
+                                ${result.caption}
+                                <button class="copy-btn" onclick="copyToClipboard('${result.caption.replace(/'/g, "\\'")}')">📋 Copy</button>
+                            </div>
+                            ${result.transcript_preview ? `<div class="result-transcript">Transcript: ${result.transcript_preview}</div>` : ''}
+                        ` : `
+                            <div style="color: #dc3545; font-style: italic;">Error: ${result.error}</div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            showResults();
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show brief success message
+                event.target.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    event.target.textContent = '📋 Copy';
+                }, 2000);
+            });
+        }
+
+        function downloadResults() {
+            if (currentResults.length === 0) return;
+
+            const csvContent = [
+                ['item', 'success', 'caption', 'transcript_preview', 'error', 'processing_time'].join(','),
+                ...currentResults.map(result => [
+                    `"${(result.filename || result.url || '').replace(/"/g, '""')}"`,
+                    result.success,
+                    `"${result.caption.replace(/"/g, '""')}"`,
+                    `"${(result.transcript_preview || '').replace(/"/g, '""')}"`,
+                    `"${(result.error || '').replace(/"/g, '""')}"`,
+                    result.processing_time || 0
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `jasper_captions_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Drag and drop functionality
+        const uploadZone = document.querySelector('.upload-zone');
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            document.getElementById('video-files').files = files;
+        });
+
+        // File input change handlers
+        document.getElementById('video-files').addEventListener('change', (e) => {
+            const fileCount = e.target.files.length;
+            if (fileCount > 0) {
+                document.querySelector('.upload-text').textContent = `${fileCount} file(s) selected`;
+            }
+        });
+
+        document.getElementById('csv-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.querySelector('.csv-upload .upload-text').textContent = `Selected: ${file.name}`;
+            }
+        });
+    </script>
+</body>
+</html>
