@@ -630,7 +630,7 @@ https://www.youtube.com/shorts/ghi789"
                         ${result.success ? `
                             <div class="result-caption">
                                 ${result.caption}
-                                <button class="copy-btn" onclick="copyToClipboard('${result.caption.replace(/'/g, "\\'")}')">📋 Copy</button>
+                                <button class="copy-btn" onclick="copyToClipboard(\`${result.caption.replace(/`/g, '\\`')}\`)">📋 Copy</button>
                             </div>
                             ${result.transcript_preview ? `<div class="result-transcript">Transcript: ${result.transcript_preview}</div>` : ''}
                         ` : `

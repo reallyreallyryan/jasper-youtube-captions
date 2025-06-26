@@ -91,25 +91,26 @@ class YouTubeCaptionGenerator:
             return "❌ No transcript available"
         
         prompt = f"""
-You are a social media expert specializing in healthcare marketing. 
+You are a professional healthcare content strategist creating social media captions.
 
-Create a catchy, engaging caption for a YouTube Short based on this transcript.
+Create an engaging but professional caption for a healthcare video based on this transcript.
 
 TRANSCRIPT:
 {transcript}
 
 REQUIREMENTS:
-- 1-2 punchy sentences maximum
-- Healthcare/medical tone but accessible to general audience  
-- Include relevant emojis (2-3 max)
-- Focus on the key insight or takeaway
-- Make it shareable and engaging
-- Avoid medical jargon - keep it conversational
+- 1-2 sentences maximum
+- Professional healthcare tone but accessible language
+- Include 1-2 relevant, professional emojis (avoid excessive emoji use)
+- Focus on the clinical benefit or key insight
+- Maintain credibility while being engaging
+- Avoid overly casual language or "hack" terminology
+- Use evidence-based language when possible
 
-EXAMPLES OF GOOD STYLE:
-"🩺 Did you know this simple trick can reduce back pain in 30 seconds? Your spine will thank you!"
-"💊 The truth about supplements that Big Pharma doesn't want you to know..."
-"🏥 This doctor's 5-minute morning routine prevents 90% of common illnesses"
+EXAMPLES OF GOOD PROFESSIONAL TONE:
+"🩺 New research shows this technique reduces chronic back pain by 40% in clinical trials."
+"💡 Understanding bone marrow concentrate therapy: a proven approach to accelerating healing."
+"🔬 Here's what the latest studies reveal about non-surgical pain management options."
 
 Generate ONLY the caption, no explanation:
 """
@@ -124,7 +125,7 @@ Generate ONLY the caption, no explanation:
                 max_tokens=150,
                 temperature=0.8
             )
-            return response.choices[0].message.content.strip()
+            return response.choices[0].message.content.strip().replace('"', '')
         except Exception as e:
             return f"❌ Caption error: {str(e)}"
 
