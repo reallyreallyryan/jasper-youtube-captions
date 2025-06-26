@@ -298,9 +298,9 @@ youtube_generator = None
 async def startup_event():
     global video_generator, youtube_generator
     try:
-        video_generator = LocalVideoCaptionGenerator()
+        # video_generator = LocalVideoCaptionGenerator()  # Comment out for now
         youtube_generator = YouTubeCaptionGenerator()
-        print("✅ Caption generators initialized successfully!")
+        print("✅ YouTube caption generator initialized successfully!")
     except Exception as e:
         print(f"⚠️ Warning: Some generators failed to initialize: {e}")
 
@@ -310,61 +310,8 @@ async def root():
 
 @app.post("/process-videos")
 async def process_videos(files: List[UploadFile] = File(...)):
-    """Process uploaded video files"""
-    if not video_generator:
-        raise HTTPException(status_code=500, detail="Video processor not available")
-    
-    results = []
-    
-    for file in files:
-        start_time = time.time()
-        
-        # Save uploaded file temporarily
-        with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as tmp_file:
-            tmp_path = tmp_file.name
-            content = await file.read()
-            tmp_file.write(content)
-        
-        try:
-            # Process video
-            result = video_generator.process_video_file(tmp_path)
-            processing_time = time.time() - start_time
-            
-            results.append(ProcessingResult(
-                filename=file.filename,
-                success=result['success'],
-                caption=result.get('caption', ''),
-                transcript_preview=result.get('transcript', ''),
-                error=result.get('error'),
-                processing_time=processing_time
-            ))
-            
-        except Exception as e:
-            processing_time = time.time() - start_time
-            results.append(ProcessingResult(
-                filename=file.filename,
-                success=False,
-                caption='',
-                transcript_preview='',
-                error=str(e),
-                processing_time=processing_time
-            ))
-        finally:
-            # Cleanup temp file
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
-    
-    return {"results": [
-        {
-            "filename": r.filename,
-            "success": r.success,
-            "caption": r.caption,
-            "transcript_preview": r.transcript_preview,
-            "error": r.error,
-            "processing_time": round(r.processing_time, 2)
-        }
-        for r in results
-    ]}
+    """Process uploaded video files - TEMPORARILY DISABLED"""
+    raise HTTPException(status_code=501, detail="Video processing temporarily unavailable. Use YouTube URLs instead!")
 
 @app.post("/process-urls")
 async def process_urls(urls: List[str]):
