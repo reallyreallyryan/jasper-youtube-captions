@@ -1,14 +1,11 @@
 [phases.setup]
-nixPkgs = ["python3", "python3Packages.pip", "ffmpeg", "curl", "wget"]
+nixPkgs = ["python3", "ffmpeg", "curl", "wget"]
 
 [phases.install]
 cmds = [
-    "pip install -r requirements.txt",
-    "pip install --upgrade yt-dlp"
+    "python -m pip install --break-system-packages -r requirements.txt",
+    "python -m pip install --break-system-packages --upgrade yt-dlp"
 ]
-
-[phases.build]
-cmds = ["echo 'Build phase complete'"]
 
 [start]
 cmd = "python main.py"

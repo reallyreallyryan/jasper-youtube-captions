@@ -1,18 +1,15 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import tempfile
-import csv
-import json
-import asyncio
-from pathlib import Path
-from typing import List, Optional
-import subprocess
-from openai import OpenAI
 import time
 from datetime import datetime
+from pathlib import Path
+from typing import List
+import subprocess
+from openai import OpenAI
 import logging
 
 # Enhanced logging for Railway debugging
@@ -288,23 +285,6 @@ async def debug_info():
     
     return debug_info
 
-@app.post("/process-videos")
-async def process_videos(files: List[UploadFile] = File(...)):
-    """Process uploaded video files - TEMPORARILY DISABLED"""
-    return {
-        "results": [
-            {
-                "filename": file.filename,
-                "success": False,
-                "caption": "🚧 Video processing coming soon! Use YouTube URLs for now.",
-                "transcript_preview": "",
-                "error": "Video processing temporarily unavailable on Railway. Use YouTube Shorts URLs instead!",
-                "processing_time": 0
-            }
-            for file in files
-        ]
-    }
-
 @app.post("/process-urls")
 async def process_urls(urls: List[str]):
     """Process YouTube Shorts URLs"""
@@ -352,89 +332,15 @@ async def process_urls(urls: List[str]):
     logger.info(f"🎯 Batch processing complete: {len(results)} results")
     return {"results": results}
 
-@app.post("/process-csv")
-async def process_csv(file: UploadFile = File(...)):
-    """Process CSV file with URLs"""
-    if not youtube_generator:
-        raise HTTPException(status_code=500, detail="YouTube processor not available")
-    
-    # Save uploaded CSV
-    with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.csv') as tmp_file:
-        content = await file.read()
-        tmp_file.write(content)
-        tmp_path = tmp_file.name
-    
-    try:
-        # Read CSV
-        with open(tmp_path, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            headers = reader.fieldnames
-            rows = list(reader)
-        
-        # Find URL column
-        url_columns = [col for col in headers if 'url' in col.lower()]
-        if not url_columns:
-            raise HTTPException(status_code=400, detail="No URL column found in CSV")
-        
-        url_column = url_columns[0]
-        
-        # Process each row
-        enhanced_rows = []
-        for row in rows:
-            url = row.get(url_column, '').strip()
-            
-            if url and 'youtube.com/shorts/' in url:
-                result = youtube_generator.process_shorts_url(url)
-                
-                enhanced_row = row.copy()
-                enhanced_row.update({
-                    'ai_caption': result.get('caption', '❌ Processing failed'),
-                    'ai_transcript_preview': result.get('transcript', ''),
-                    'ai_status': 'success' if result['success'] else 'failed'
-                })
-            else:
-                enhanced_row = row.copy()
-                enhanced_row.update({
-                    'ai_caption': '❌ Invalid YouTube Shorts URL',
-                    'ai_transcript_preview': '',
-                    'ai_status': 'invalid_url'
-                })
-            
-            enhanced_rows.append(enhanced_row)
-        
-        # Create output CSV
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_filename = f"enhanced_captions_{timestamp}.csv"
-        output_path = f"/tmp/{output_filename}"
-        
-        new_headers = list(headers) + ['ai_caption', 'ai_transcript_preview', 'ai_status']
-        
-        with open(output_path, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=new_headers)
-            writer.writeheader()
-            writer.writerows(enhanced_rows)
-        
-        return FileResponse(
-            output_path,
-            media_type='text/csv',
-            filename=output_filename
-        )
-        
-    finally:
-        # Cleanup temp file
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-
 @app.get("/health")
 async def health_check():
     return {
         "status": "healthy",
-        "video_processor": False,  # Disabled for now
         "youtube_processor": youtube_generator is not None,
         "yt_dlp_available": youtube_generator.yt_dlp_available if youtube_generator else False,
         "timestamp": datetime.now().isoformat(),
         "platform": "Railway",
-        "features": ["YouTube URL processing", "CSV enhancement"],
+        "features": ["YouTube URL processing"],
         "openai_configured": bool(os.getenv('OPENAI_API_KEY'))
     }
 
