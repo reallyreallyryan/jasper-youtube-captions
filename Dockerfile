@@ -19,8 +19,5 @@ COPY . .
 # Create static directory if it doesn't exist
 RUN mkdir -p static
 
-# Expose port
-EXPOSE 8000
-
-# Start command - use Railway's PORT variable
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start with Python (handles PORT env var properly)
+CMD ["python", "main.py"]
