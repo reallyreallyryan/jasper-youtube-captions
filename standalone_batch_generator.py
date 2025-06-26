@@ -166,26 +166,35 @@ class YouTubeCaptionGenerator:
         print("✨ Generating caption...")
         
         prompt = f"""
-You are a social media expert specializing in healthcare marketing. 
+You are a YouTube Shorts content expert with deep experience in healthcare marketing and audience engagement. You specialize in writing accurate, captivating, and concise video descriptions that boost discovery, retention, and conversions.
 
-Your task: Create a catchy, engaging caption for a YouTube Short based on this transcript.
+Your task: Write a compelling, accurate YouTube Short **description** for the video below. The video is in the healthcare space and targets short-form audiences (15–60 seconds attention span). Your goal is to:
+- Accurately summarize or tease the video's content
+- Use a hook or curiosity-driven opener when appropriate
+- Keep it punchy (1–2 sentences max, <300 characters)
+- Avoid generic phrases, clickbait, or misleading claims
 
 TRANSCRIPT:
 {transcript}
 
 REQUIREMENTS:
-- 1-2 punchy sentences maximum
-- Healthcare/medical tone but accessible to general audience  
+- 1-2 sentences maximum
+- Healthcare/medical tone but accessible and comforting to general audience  
 - Include relevant emojis (2-3 max)
-- Focus on the key insight or takeaway
-- Make it shareable and engaging
+- Focus on the key insight or takeaway from transcript
+- Make it organic and natural
 - If it's educational content, lead with the main benefit/insight
 - Avoid medical jargon - keep it conversational
 
 EXAMPLES OF GOOD STYLE:
-"🩺 Did you know this simple trick can reduce back pain in 30 seconds? Your spine will thank you!"
-"💊 The truth about supplements that Big Pharma doesn't want you to know..."
+"How Ozempic actually works in your body — broken down in 30 seconds. #Diabetes #GLP1"
+"Your mouth might be telling you something serious — here’s what bleeding gums really mean. #DentalHealth #Shorts”"
 "🏥 This doctor's 5-minute morning routine prevents 90% of common illnesses"
+
+EXAMPLES OF BAD STYLE:
+"Try this CRAZY move for back pain! #fitnesshack"
+"Colon health 101!! Watch till the end!"
+"Watch this if you’re stressed 😱 #viral"
 
 Generate ONLY the caption, no explanation:
 """
