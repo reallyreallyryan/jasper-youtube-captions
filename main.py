@@ -96,7 +96,18 @@ class YouTubeCaptionGenerator:
             logger.info("✅ Auto-transcript extracted successfully")
             return transcript
         
-        logger.warning("❌ Auto-transcript extraction failed")
+        logger.warning("❌ Auto-transcript extraction failed, trying audio download...")
+        
+        # Fallback: Download audio and transcribe
+        audio_path = self._download_audio(youtube_url)
+        if audio_path:
+            transcript = self._transcribe_audio(audio_path)
+            # Cleanup temp file
+            if os.path.exists(audio_path):
+                os.unlink(audio_path)
+            return transcript
+        
+        logger.error("❌ Both auto-transcript and audio transcription failed")
         return None
     
     def _get_auto_transcript(self, youtube_url):
@@ -177,6 +188,90 @@ class YouTubeCaptionGenerator:
             logger.error(f"💥 Auto-transcript extraction failed: {str(e)}")
             import traceback
             logger.error(f"🔍 Full traceback: {traceback.format_exc()}")
+            return None
+    
+    def _download_audio(self, youtube_url):
+        """Download audio from YouTube video"""
+        try:
+            logger.info("🎵 Downloading audio for transcription...")
+            
+            with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_file:
+                temp_path = temp_file.name
+            
+            cmd = [
+                'yt-dlp', '-x', '--audio-format', 'mp3',
+                '--audio-quality', '0',
+                '-o', temp_path.replace('.mp3', '.%(ext)s'),
+                youtube_url
+            ]
+            
+            logger.info(f"🚀 Audio download command: {' '.join(cmd)}")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            
+            logger.info(f"📊 Audio download return code: {result.returncode}")
+            if result.stdout:
+                logger.info(f"📄 Audio stdout: {result.stdout[:300]}...")
+            if result.stderr:
+                logger.warning(f"⚠️ Audio stderr: {result.stderr[:300]}...")
+            
+            if result.returncode == 0:
+                # Check for possible audio files
+                possible_files = [
+                    temp_path,
+                    temp_path.replace('.mp3', '.m4a'),
+                    temp_path.replace('.mp3', '.webm'),
+                    temp_path.replace('.mp3', '.wav')
+                ]
+                
+                for file_path in possible_files:
+                    if os.path.exists(file_path):
+                        logger.info(f"✅ Audio file created: {file_path}")
+                        return file_path
+                
+                logger.error("❌ No audio file found despite success code")
+                return None
+            else:
+                logger.error(f"❌ Audio download failed with code {result.returncode}")
+                return None
+            
+        except subprocess.TimeoutExpired:
+            logger.error("⏰ Audio download timed out")
+            return None
+        except Exception as e:
+            logger.error(f"💥 Audio download failed: {str(e)}")
+            return None
+    
+    def _transcribe_audio(self, audio_path):
+        """Transcribe audio using OpenAI Whisper"""
+        try:
+            logger.info(f"🎤 Transcribing audio file: {audio_path}")
+            
+            # Check file exists and size
+            if not os.path.exists(audio_path):
+                logger.error("❌ Audio file doesn't exist")
+                return None
+                
+            file_size = os.path.getsize(audio_path)
+            logger.info(f"📁 Audio file size: {file_size} bytes")
+            
+            if file_size == 0:
+                logger.error("❌ Audio file is empty")
+                return None
+            
+            with open(audio_path, 'rb') as audio_file:
+                transcript = self.client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    response_format="text"
+                )
+            
+            logger.info(f"✅ Whisper transcription complete: {len(transcript)} chars")
+            logger.info(f"📝 Transcript preview: {transcript[:100]}...")
+            return transcript
+            
+        except Exception as e:
+            logger.error(f"💥 Whisper transcription failed: {str(e)}")
             return None
     
     def _generate_caption(self, transcript):
