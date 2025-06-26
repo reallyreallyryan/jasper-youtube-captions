@@ -36,7 +36,10 @@ class YouTubeCaptionGenerator:
             
             transcript = self._extract_transcript(youtube_url)
             if not transcript:
-                return {'success': False, 'error': 'Could not extract transcript'}
+                return {
+                    'success': False, 
+                    'error': 'No transcript or captions available. Try a different video, or one with auto-generated captions.'
+                }
             
             caption = self._generate_caption(transcript)
             
@@ -54,7 +57,84 @@ class YouTubeCaptionGenerator:
         if transcript:
             return transcript
         
-        # For now, skip audio download on Railway to avoid complexity
+        # Fallback: Try audio download + Whisper transcription
+        print("📥 No auto-captions found, trying audio download + transcription...")
+        audio_path = self._download_audio(youtube_url)
+        if audio_path:
+            transcript = self._transcribe_audio(audio_path)
+            if os.path.exists(audio_path):
+                os.unlink(audio_path)
+            return transcript
+        
+        # Last resort: get video title/description
+        video_info = self._get_video_info(youtube_url)
+        if video_info:
+            title = video_info.get('title', '')
+            description = video_info.get('description', '')
+            if title or description:
+                return f"Video title: {title}. Description: {description[:300]}..."
+        
+        return None
+    
+    def _download_audio(self, youtube_url):
+        """Download audio from YouTube video"""
+        try:
+            with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_file:
+                temp_path = temp_file.name
+            
+            cmd = [
+                'yt-dlp', '-x', '--audio-format', 'mp3',
+                '--audio-quality', '0',
+                '-o', temp_path.replace('.mp3', '.%(ext)s'),
+                youtube_url
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            
+            if result.returncode == 0:
+                possible_files = [
+                    temp_path,
+                    temp_path.replace('.mp3', '.m4a'),
+                    temp_path.replace('.mp3', '.webm')
+                ]
+                
+                for file_path in possible_files:
+                    if os.path.exists(file_path):
+                        return file_path
+        except Exception as e:
+            print(f"Audio download failed: {e}")
+        return None
+    
+    def _transcribe_audio(self, audio_path):
+        """Transcribe audio using OpenAI Whisper"""
+        try:
+            print("🎤 Transcribing audio with Whisper...")
+            with open(audio_path, 'rb') as audio_file:
+                transcript = self.client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    response_format="text"
+                )
+            return transcript
+        except Exception as e:
+            print(f"Transcription failed: {e}")
+            return None
+    
+    def _get_video_info(self, youtube_url):
+        """Get basic video information as fallback"""
+        try:
+            cmd = ['yt-dlp', '--dump-json', '--no-download', youtube_url]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+            
+            if result.returncode == 0:
+                video_data = json.loads(result.stdout)
+                return {
+                    'title': video_data.get('title', ''),
+                    'description': video_data.get('description', ''),
+                    'duration': video_data.get('duration', 0)
+                }
+        except Exception as e:
+            print(f"Video info extraction failed: {e}")
         return None
     
     def _get_auto_transcript(self, youtube_url):
