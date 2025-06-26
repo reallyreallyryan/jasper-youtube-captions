@@ -1,11 +1,8 @@
 [phases.setup]
-nixPkgs = ["python3", "ffmpeg", "curl", "wget"]
+nixPkgs = ["python3", "ffmpeg", "yt-dlp"]
 
 [phases.install]
-cmds = [
-    "python -m pip install --break-system-packages -r requirements.txt",
-    "python -m pip install --break-system-packages --upgrade yt-dlp"
-]
+cmds = ["pip3 install -r requirements.txt"]
 
 [start]
-cmd = "python main.py"
+cmd = "python3 main.py"
